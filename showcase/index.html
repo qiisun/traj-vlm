@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rigid-Body Simulation | All Cases</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="simple.css?v=20260826-movi-five-columns">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>SOTA Comparison</h1>
+      <p>49-frame rigid-body rollouts</p>
+    </div>
+    <div class="controls" aria-label="Synchronized video controls">
+      <button id="play-all" type="button">Play all</button>
+      <button id="restart-all" type="button">Restart</button>
+      <input id="global-timeline" type="range" min="0" max="1000" value="0" aria-label="Video timeline">
+      <output id="frame-output" for="global-timeline">00 / 48</output>
+    </div>
+  </header>
+
+  <main>
+    <section class="benchmark-section" aria-labelledby="rigid-title">
+      <div class="section-heading">
+        <h2 id="rigid-title">Rigid-8 TEST</h2>
+        <p>Object-level SE(3) rollouts</p>
+      </div>
+      <div id="results" class="results" aria-label="Five-way rigid-body video comparison"></div>
+    </section>
+
+    <!-- <section class="benchmark-section" aria-labelledby="ood-title">
+      <div class="section-heading">
+        <h2 id="ood-title">Rigid+ OOD</h2>
+        <p>One manifest-first case per category · checkpoint 90000</p>
+      </div>
+      <p class="notice">
+        Column order: <strong>GT | Qwen coarse | SE3-B + Coarse</strong>.
+        Cases are selected deterministically as the first manifest entry in each category.
+      </p>
+      <div id="ood-results" class="results" aria-label="Rigid+ OOD video comparison"></div>
+    </section> -->
+
+    <section class="benchmark-section" aria-labelledby="movi-title">
+      <div class="section-heading">
+        <h2 id="movi-title">MOVi-A / MOVi-B / MOVi-S</h2>
+        <p>Blender/Eevee mesh rollouts</p>
+      </div>
+      <div id="movi-results" class="results movi-results" aria-label="MOVi video comparison"></div>
+    </section>
+  </main>
+
+  <footer>
+    Available assets: <span id="asset-count">0 / 0</span>
+  </footer>
+
+  <script src="data.js?v=20260904-hide-movi-cases"></script>
+  <script src="simple.js?v=20260904-hide-sample-labels"></script>
+</body>
+</html>

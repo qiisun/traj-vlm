@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Reason, Plan, and Simulate: trajectory-grounded vision-language models for generalizable rigid-body simulation."
+    />
+    <title>Reason, Plan, and Simulate</title>
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap" />
+    <link rel="stylesheet" href="styles.css?v=20260923-parameters" />
+    <script src="script.js?v=20260904-many-body-feature" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="site-header">
+      <nav class="nav shell" aria-label="Primary navigation">
+        <a class="wordmark" href="#top" aria-label="Reason, Plan, and Simulate home">
+          <span>R</span><span>P</span><span>S</span>
+        </a>
+        <button
+          class="menu-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="nav-links"
+          aria-label="Open navigation"
+          title="Menu"
+        >
+          &#9776;
+        </button>
+        <div class="nav-links" id="nav-links">
+          <a href="#overview">Overview</a>
+          <a href="#method">Method</a>
+          <a href="#dataset">Dataset</a>
+          <a href="#parameters">Parameters</a>
+          <a href="#results">Results</a>
+          <a href="#ablation">Ablation</a>
+          <a href="#applications">Applications</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <section class="hero" id="top">
+        <div class="shell hero-inner">
+          <h1>
+            <span class="hero-title-prefix">Reason, Plan, and Simulate:</span>
+            <span class="hero-title-main">Trajectory-Grounded VLMs for Rigid-Body Simulation</span>
+          </h1>
+          <div class="authors" aria-label="Authors">
+            <span>Qi Sun</span>
+            <span>Jing Liao</span>
+          </div>
+          <p class="affiliation">City University of Hong Kong</p>
+
+          <div class="hero-actions" aria-label="Project resources">
+            <span class="button is-disabled" aria-disabled="true">
+              Paper <small>soon</small>
+            </span>
+            <span class="button is-disabled" aria-disabled="true">
+              Code <small>soon</small>
+            </span>
+            <a class="button button-accent" href="#citation">BibTeX</a>
+          </div>
+
+          <div class="hero-result" aria-label="Headline MOVi result">
+            <span>vs. PhysiFormer on MOVi</span>
+            <strong>16.8% lower translation error</strong>
+            <i aria-hidden="true"></i>
+            <strong>30.7% lower rotation error</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="tldr" id="overview">
+        <div class="shell tldr-grid">
+          <div>
+            <p class="eyebrow">TL;DR</p>
+            <h2>Broad physical priors, grounded as explicit motion.</h2>
+          </div>
+          <p>
+            A trajectory-grounded VLM reasons about object-centric physical events,
+            plans sparse numerical waypoints, and simulates dense per-object
+            <span class="math">SE(3)</span> trajectories for generalizable rigid-body dynamics.
+          </p>
+        </div>
+      </section>
+
+      <section class="section shell reveal" aria-labelledby="abstract-title">
+        <div class="section-heading compact">
+          <p class="eyebrow">Overview</p>
+          <h2 id="abstract-title">Abstract</h2>
+        </div>
+        <div class="abstract-copy">
+          <p>
+            Learning-based physical simulators produce explicit object dynamics, but
+            their physical repertoire is typically bounded by the task-specific
+            trajectories seen during training. Foundation vision-language models
+            offer broader semantic and qualitative physical priors, yet are not
+            trained to predict temporally dense, metrically calibrated state
+            transitions.
+          </p>
+          <p>
+            We introduce a trajectory-grounded VLM for physical simulation. The model
+            first predicts an object-centric physical event trace and sparse numerical
+            translation waypoints. A shape-aware flow-matching decoder then conditions
+            on this explicit plan and the initial object geometry to generate dense
+            per-object <span class="math">SE(3)</span> trajectories. Together with MOVi,
+            our <strong>Rigid+</strong> benchmark evaluates generalization to unseen
+            shapes, object counts, physical parameters, and compositions of physical
+            phenomena.
+          </p>
+        </div>
+      </section>
+
+      <section class="section section-rule shell reveal" aria-labelledby="contributions-title">
+        <div class="section-heading">
+          <p class="eyebrow">What is new</p>
+          <h2 id="contributions-title">Key contributions</h2>
+        </div>
+        <div class="contribution-grid">
+          <article class="contribution">
+            <span class="index">01</span>
+            <h3>Trajectory-grounded VLM</h3>
+            <p>
+              Supervised trajectory tuning turns qualitative physical priors into
+              explicit numerical motion plans through a reason-plan hierarchy.
+            </p>
+          </article>
+          <article class="contribution">
+            <span class="index">02</span>
+            <h3>Shape-aware simulation</h3>
+            <p>
+              A conditional flow-matching decoder converts sparse waypoints and object
+              geometry into dense rigid-body pose trajectories.
+            </p>
+          </article>
+          <article class="contribution">
+            <span class="index">03</span>
+            <h3>Generalization benchmark</h3>
+            <p>
+              Rigid+ spans eight rigid-body phenomena and tests geometry, cardinality,
+              parameter, and composition shifts.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="method section-band" id="method" aria-labelledby="method-title">
+        <div class="shell reveal">
+          <div class="section-heading method-heading">
+            <p class="eyebrow">Method</p>
+            <h2 id="method-title">From observations to dense dynamics</h2>
+            <p>
+              The explicit sparse trajectory is an interpretable interface between
+              high-level physical reasoning and low-level geometric simulation.
+            </p>
+          </div>
+
+          <div class="method-figures">
+            <figure class="paper-figure">
+              <img src="assets/method/pipeline.png?v=20260923" alt="Pipeline from rendered observations and structured physical conditions through trajectory-grounded reasoning and planning to dense SE(3) simulation" />
+              <figcaption>
+                <strong>Method overview.</strong> The VLM reasons about object-centric
+                events and plans sparse waypoints before the decoder produces dense motion.
+              </figcaption>
+            </figure>
+            <figure class="paper-figure">
+              <img src="assets/method/shape-aware-decoder.png?v=20260923" alt="Shape-aware flow-matching decoder with motion plan, geometry, initial velocity, and initial layout conditioning" />
+              <figcaption>
+                <strong>Shape-aware dense trajectory decoder.</strong> Coarse motion,
+                geometry, initial velocity, and layout jointly condition dense translation
+                and rotation prediction.
+              </figcaption>
+            </figure>
+          </div>
+
+          <div class="method-details">
+            <p>
+              The VLM predicts physical event trace <span class="math">R</span> and sparse
+              plan <span class="math">P</span>. The decoder models
+              <span class="math">p(X | P, S, A)</span>, using geometry, scale, and optional
+              physical conditions to recover a dense horizon of rigid poses.
+            </p>
+            <p>
+              This decomposition avoids long autoregressive coordinate sequences while
+              keeping the motion plan inspectable and independently editable.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="dataset section shell reveal" id="dataset" aria-labelledby="dataset-title">
+        <div class="section-heading dataset-heading">
+          <div>
+            <p class="eyebrow">Dataset</p>
+            <h2 id="dataset-title">Rigid+ and MOVi</h2>
+          </div>
+          <p>
+            We evaluate on our broad rigid-body benchmark Rigid+ together with the
+            established MOVi-A, MOVi-B, and MOVi-S synthetic datasets.
+          </p>
+        </div>
+
+        <div class="dataset-group-heading">
+          <h3>Rigid+</h3>
+          <p>Eight categories covering motion, contact, intervention, and constraints.</p>
+        </div>
+
+        <div class="dataset-stats" aria-label="Rigid+ dataset summary">
+          <div>
+            <strong>8</strong>
+            <span>physical categories</span>
+          </div>
+          <div>
+            <strong>28</strong>
+            <span>event primitives</span>
+          </div>
+          <div>
+            <strong>4</strong>
+            <span>generalization axes</span>
+          </div>
+        </div>
+
+        <div class="dataset-grid">
+          <figure class="dataset-card">
+            <div class="dataset-pair">
+              <video src="assets/dataset/boundary_interaction_id_0000.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Boundary interaction example one"></video>
+              <video src="assets/dataset/boundary_interaction_id_0046.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Boundary interaction example two"></video>
+            </div>
+            <figcaption>Boundary interaction</figcaption>
+          </figure>
+          <figure class="dataset-card">
+            <div class="dataset-pair">
+              <video src="assets/dataset/constrained_rigid_id_0006.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Constrained rigid-body motion example one"></video>
+              <video src="assets/dataset/constrained_rigid_id_0028.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Constrained rigid-body motion example two"></video>
+            </div>
+            <figcaption>Constrained motion</figcaption>
+          </figure>
+          <figure class="dataset-card">
+            <div class="dataset-pair">
+              <video src="assets/dataset/external_intervention_id_0017.mp4" autoplay muted loop playsinline preload="metadata" aria-label="External intervention example one"></video>
+              <video src="assets/dataset/external_intervention_id_0031.mp4" autoplay muted loop playsinline preload="metadata" aria-label="External intervention example two"></video>
+            </div>
+            <figcaption>External intervention</figcaption>
+          </figure>
+          <figure class="dataset-card">
+            <div class="dataset-pair">
+              <video src="assets/dataset/impact_collision_id_0005.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Impact and collision example one"></video>
+              <video src="assets/dataset/impact_collision_id_0066.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Impact and collision example two"></video>
+            </div>
+            <figcaption>Impact &amp; collision</figcaption>
+          </figure>
+          <figure class="dataset-card">
+            <div class="dataset-pair">
+              <video src="assets/dataset/stability_support_id_0014.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Stability and support example one"></video>
+              <video src="assets/dataset/stability_support_id_0440.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Stability and support example two"></video>
+            </div>
+            <figcaption>Stability &amp; support</figcaption>
+          </figure>
+          <figure class="dataset-card">
+            <div class="dataset-pair">
+              <video src="assets/dataset/sustained_contact_id_0001.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sustained contact example one"></video>
+              <video src="assets/dataset/sustained_contact_id_0028.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sustained contact example two"></video>
+            </div>
+            <figcaption>Sustained contact</figcaption>
+          </figure>
+        </div>
+
+        <p class="dataset-note">Also includes free motion and many-body interaction.</p>
+
+        <div class="dataset-group-heading dataset-group-heading-spaced">
+          <h3>MOVi</h3>
+          <p>Representative scenes from MOVi-A, MOVi-B, and MOVi-S.</p>
+        </div>
+
+        <div class="dataset-grid dataset-grid-movi">
+          <figure class="dataset-card dataset-card-movi">
+            <div class="dataset-pair">
+              <video src="assets/dataset/movia_819.mp4" autoplay muted loop playsinline preload="metadata" aria-label="MOVi-A example one"></video>
+              <video src="assets/dataset/movia_5423.mp4" autoplay muted loop playsinline preload="metadata" aria-label="MOVi-A example two"></video>
+            </div>
+            <figcaption>MOVi-A</figcaption>
+          </figure>
+          <figure class="dataset-card dataset-card-movi">
+            <div class="dataset-pair">
+              <video src="assets/dataset/movib_6804.mp4" autoplay muted loop playsinline preload="metadata" aria-label="MOVi-B example one"></video>
+              <video src="assets/dataset/movib_16524.mp4" autoplay muted loop playsinline preload="metadata" aria-label="MOVi-B example two"></video>
+            </div>
+            <figcaption>MOVi-B</figcaption>
+          </figure>
+          <figure class="dataset-card dataset-card-movi">
+            <div class="dataset-pair">
+              <video src="assets/dataset/movis_7410.mp4" autoplay muted loop playsinline preload="metadata" aria-label="MOVi-S example one"></video>
+              <video src="assets/dataset/movis_15915.mp4" autoplay muted loop playsinline preload="metadata" aria-label="MOVi-S example two"></video>
+            </div>
+            <figcaption>MOVi-S</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="parameters section-band" id="parameters" aria-labelledby="parameters-title">
+        <div class="shell reveal">
+          <div class="section-heading parameter-heading">
+            <div>
+              <p class="eyebrow">Physical parameters</p>
+              <h2 id="parameters-title">Controllable dynamics</h2>
+            </div>
+            <p>
+              Conditioning on mass, friction, and restitution produces distinct,
+              physically consistent trajectories while preserving the scene setup.
+            </p>
+          </div>
+
+          <div class="parameter-grid">
+            <article class="parameter-card">
+              <div class="parameter-card-heading">
+                <span>01</span>
+                <h3>Mass</h3>
+              </div>
+              <div class="parameter-comparison">
+                <figure>
+                  <video src="assets/parameter/equal_mass_prediction.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Prediction with equal object masses"></video>
+                  <figcaption>Equal mass</figcaption>
+                </figure>
+                <figure>
+                  <video src="assets/parameter/heavy_left_prediction.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Prediction with a heavier object on the left"></video>
+                  <figcaption>Heavy left object</figcaption>
+                </figure>
+              </div>
+            </article>
+
+            <article class="parameter-card">
+              <div class="parameter-card-heading">
+                <span>02</span>
+                <h3>Friction</h3>
+              </div>
+              <div class="parameter-comparison">
+                <figure>
+                  <video src="assets/parameter/friction_low_after.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Prediction with low friction"></video>
+                  <figcaption>Low friction</figcaption>
+                </figure>
+                <figure>
+                  <video src="assets/parameter/friction_high_after.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Prediction with high friction"></video>
+                  <figcaption>High friction</figcaption>
+                </figure>
+              </div>
+            </article>
+
+            <article class="parameter-card">
+              <div class="parameter-card-heading">
+                <span>03</span>
+                <h3>Restitution</h3>
+              </div>
+              <div class="parameter-comparison">
+                <figure>
+                  <video src="assets/parameter/restitution_low_after.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Prediction with low restitution"></video>
+                  <figcaption>Low restitution</figcaption>
+                </figure>
+                <figure>
+                  <video src="assets/parameter/restitution_high_after.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Prediction with high restitution"></video>
+                  <figcaption>High restitution</figcaption>
+                </figure>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="results section section-rule shell reveal" id="results" aria-labelledby="results-title">
+        <div class="results-heading">
+          <div class="section-heading compact">
+            <p class="eyebrow">Results</p>
+            <h2 id="results-title">Generalizable rigid-body simulation</h2>
+          </div>
+          <div class="results-intro">
+            <p>
+              Representative 49-frame object-level SE(3) rollouts across Rigid+ and
+              MOVi. Scroll each comparison horizontally on smaller screens.
+            </p>
+            <a class="button button-accent" href="showcase/index.html">View all 28 cases</a>
+          </div>
+        </div>
+        <div class="benchmark-summary" aria-label="MOVi benchmark summary">
+          <div class="benchmark-summary-head">
+            <span>Translation rMSE <small>&times;10<sup>&minus;2</sup> m</small></span>
+            <span>Rotation rMSE <small>degrees</small></span>
+          </div>
+          <article class="benchmark-card">
+            <div>
+              <p>MOVi-A</p>
+              <span>8&ndash;10 objects</span>
+            </div>
+            <dl>
+              <div><dt>Ours</dt><dd>4.356 / 6.743&deg;</dd></div>
+              <div><dt>PhysiFormer</dt><dd>5.692 / 8.388&deg;</dd></div>
+            </dl>
+            <strong>&darr; 23.5% / 19.6%</strong>
+          </article>
+          <article class="benchmark-card">
+            <div>
+              <p>MOVi-B</p>
+              <span>Complex geometry</span>
+            </div>
+            <dl>
+              <div><dt>Ours</dt><dd>6.759 / 6.380&deg;</dd></div>
+              <div><dt>PhysiFormer</dt><dd>7.133 / 11.48&deg;</dd></div>
+            </dl>
+            <strong>&darr; 5.2% / 44.4%</strong>
+          </article>
+          <article class="benchmark-card">
+            <div>
+              <p>MOVi-S</p>
+              <span>Shape-controlled</span>
+            </div>
+            <dl>
+              <div><dt>Ours</dt><dd>4.013 / 5.640&deg;</dd></div>
+              <div><dt>PhysiFormer</dt><dd>5.366 / 7.198&deg;</dd></div>
+            </dl>
+            <strong>&darr; 25.2% / 21.6%</strong>
+          </article>
+          <p class="benchmark-note">Lower is better. Improvements are relative to PhysiFormer.</p>
+        </div>
+        <div id="featured-results" class="featured-results" aria-label="Featured result comparisons"></div>
+        <div class="ood-results">
+          <div class="result-group-heading">
+            <div>
+              <p class="eyebrow">Out-of-distribution</p>
+            </div>
+            <p>Comparison</p>
+          </div>
+          <div class="ood-grid">
+            <article class="ood-case">
+              <h4>Ball-to-domino chain</h4>
+              <div class="ood-comparison">
+                <figure>
+                  <span>Ours</span>
+                  <video src="assets/results/ood/ball-to-domino-chain/ours.mp4" poster="assets/results/ood/ball-to-domino-chain/ours.png" autoplay muted loop playsinline preload="metadata" aria-label="Our ball-to-domino chain prediction"></video>
+                </figure>
+                <figure>
+                  <span>PhysiFormer</span>
+                  <video src="assets/results/ood/ball-to-domino-chain/physiformer.mp4" poster="assets/results/ood/ball-to-domino-chain/physiformer.png" autoplay muted loop playsinline preload="metadata" aria-label="Ball-to-domino chain PhysiFormer SE3-B prediction"></video>
+                </figure>
+              </div>
+            </article>
+            <article class="ood-case">
+              <h4>Rolling ball off edge</h4>
+              <div class="ood-comparison">
+                <figure>
+                  <span>Ours</span>
+                  <video src="assets/results/ood/rolling-ball-off-edge/ours.mp4" poster="assets/results/ood/rolling-ball-off-edge/ours.png" autoplay muted loop playsinline preload="metadata" aria-label="Our rolling-ball-off-edge prediction"></video>
+                </figure>
+                <figure>
+                  <span>PhysiFormer</span>
+                  <video src="assets/results/ood/rolling-ball-off-edge/physiformer.mp4" poster="assets/results/ood/rolling-ball-off-edge/physiformer.png" autoplay muted loop playsinline preload="metadata" aria-label="Rolling ball off edge PhysiFormer SE3-B prediction"></video>
+                </figure>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="ablation section-band" id="ablation" aria-labelledby="ablation-title">
+        <div class="shell reveal">
+          <div class="section-heading ablation-heading">
+            <div>
+              <p class="eyebrow">Guidance ablation</p>
+              <h2 id="ablation-title">Explicit plans matter</h2>
+            </div>
+            <div>
+              <p>
+                Direct prediction with coarse numerical waypoints gives the best mean
+                translation and rotation accuracy on Rigid+.
+              </p>
+            </div>
+          </div>
+
+          <div class="ablation-case">
+            <p class="ablation-case-label">Case A</p>
+            <div class="ablation-grid">
+              <figure class="ablation-card">
+                <video src="assets/ablation/guidance-1/gt.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Case one ground-truth trajectory"></video>
+                <figcaption>
+                  <strong>Ground truth</strong>
+                  <span>Reference</span>
+                </figcaption>
+              </figure>
+              <figure class="ablation-card ablation-card-best">
+                <video src="assets/ablation/guidance-1/ours.mp4?v=20260826-2" autoplay muted loop playsinline preload="metadata" aria-label="Case one direct prediction with coarse guidance"></video>
+                <figcaption>
+                  <strong>Ours</strong>
+                </figcaption>
+              </figure>
+              <figure class="ablation-card">
+                <video src="assets/ablation/guidance-1/residual.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Case one residual prediction with coarse guidance"></video>
+                <figcaption>
+                  <strong>Residual + coarse</strong>
+                </figcaption>
+              </figure>
+              <figure class="ablation-card">
+                <video src="assets/ablation/guidance-1/no-coarse.mp4?v=20260826" autoplay muted loop playsinline preload="metadata" aria-label="Case one direct prediction without coarse guidance"></video>
+                <figcaption>
+                  <strong>No coarse plan</strong>
+                </figcaption>
+              </figure>
+              <figure class="ablation-card">
+                <video src="assets/ablation/guidance-1/implicit.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Case one implicit VLM conditioning"></video>
+                <figcaption>
+                  <strong>Implicit condition</strong>
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="ablation-case">
+            <p class="ablation-case-label">Case B</p>
+            <div class="ablation-grid">
+              <figure class="ablation-card">
+                <video src="assets/ablation/guidance-2/gt.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Case two ground-truth trajectory"></video>
+                <figcaption>
+                  <strong>Ground truth</strong>
+                  <span>Reference</span>
+                </figcaption>
+              </figure>
+              <figure class="ablation-card ablation-card-best">
+                <video src="assets/ablation/guidance-2/ours.mp4?v=20260826-2" autoplay muted loop playsinline preload="metadata" aria-label="Case two direct prediction with coarse guidance"></video>
+                <figcaption>
+                  <strong>Ours</strong>
+                </figcaption>
+              </figure>
+              <figure class="ablation-card">
+                <video src="assets/ablation/guidance-2/residual.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Case two residual prediction with coarse guidance"></video>
+                <figcaption>
+                  <strong>Residual + coarse</strong>
+                </figcaption>
+              </figure>
+              <figure class="ablation-card">
+                <video src="assets/ablation/guidance-2/no-coarse.mp4?v=20260826" autoplay muted loop playsinline preload="metadata" aria-label="Case two direct prediction without coarse guidance"></video>
+                <figcaption>
+                  <strong>No coarse plan</strong>
+                </figcaption>
+              </figure>
+              <figure class="ablation-card">
+                <video src="assets/ablation/guidance-2/implicit.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Case two implicit VLM conditioning"></video>
+                <figcaption>
+                  <strong>Implicit condition</strong>
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sparse-ablation section shell reveal" id="sparse-trajectory" aria-labelledby="sparse-title">
+        <div class="section-heading sparse-heading">
+          <div>
+            <p class="eyebrow">Sparse trajectory ablation</p>
+            <h2 id="sparse-title">Trajectory representation</h2>
+          </div>
+          <div>
+            <p>
+              We compare uniform temporal downsampling with FAST across representative
+              MOVi cases. Moderate sparsity preserves global motion without requiring
+              a long output sequence.
+            </p>
+          </div>
+        </div>
+
+        <div class="sparse-case">
+          <p class="sparse-case-label">Case 01 <span>MOVi-A &middot; 224</span></p>
+          <div class="sparse-grid">
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-01/d1.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case one with d equals one"></video>
+              <figcaption><strong>d=1</strong><span>48 points</span></figcaption>
+            </figure>
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-01/d2.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case one with d equals two"></video>
+              <figcaption><strong>d=2</strong><span>24 points</span></figcaption>
+            </figure>
+            <figure class="sparse-card sparse-card-best">
+              <video src="assets/ablation/sparse/case-01/d5.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case one with d equals five"></video>
+              <figcaption><strong>d=5 &middot; Ours</strong><span>9 points</span></figcaption>
+            </figure>
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-01/d10.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case one with d equals ten"></video>
+              <figcaption><strong>d=10</strong><span>4 points</span></figcaption>
+            </figure>
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-01/d25.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case one with d equals twenty-five"></video>
+              <figcaption><strong>d=25</strong><span>1 point</span></figcaption>
+            </figure>
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-01/fast.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case one with FAST representation"></video>
+              <figcaption><strong>FAST</strong><span>48 points</span></figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="sparse-case">
+          <p class="sparse-case-label">Case 02 <span>MOVi-A &middot; 13702</span></p>
+          <div class="sparse-grid">
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-02/d1.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case two with d equals one"></video>
+              <figcaption><strong>d=1</strong><span>48 points</span></figcaption>
+            </figure>
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-02/d2.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case two with d equals two"></video>
+              <figcaption><strong>d=2</strong><span>24 points</span></figcaption>
+            </figure>
+            <figure class="sparse-card sparse-card-best">
+              <video src="assets/ablation/sparse/case-02/d5.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case two with d equals five"></video>
+              <figcaption><strong>d=5 &middot; Ours</strong><span>9 points</span></figcaption>
+            </figure>
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-02/d10.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case two with d equals ten"></video>
+              <figcaption><strong>d=10</strong><span>4 points</span></figcaption>
+            </figure>
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-02/d25.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case two with d equals twenty-five"></video>
+              <figcaption><strong>d=25</strong><span>1 point</span></figcaption>
+            </figure>
+            <figure class="sparse-card">
+              <video src="assets/ablation/sparse/case-02/fast.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Sparse trajectory case two with FAST representation"></video>
+              <figcaption><strong>FAST</strong><span>48 points</span></figcaption>
+            </figure>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="applications section section-rule shell reveal" id="applications" aria-labelledby="applications-title">
+        <div class="applications-topline">
+          <div class="section-heading compact">
+            <p class="eyebrow">Applications</p>
+            <h2 id="applications-title">Spatial control for video generation</h2>
+          </div>
+          <p>
+            Dense simulated trajectories provide spatial guidance for a video generator,
+            improving object persistence and the timing of physical interactions.
+          </p>
+        </div>
+
+        <div class="scene-control" aria-label="Application scene selection">
+          <span>Scene</span>
+          <div class="scene-tabs" role="tablist" aria-label="Application scenes">
+            <button type="button" role="tab" aria-selected="true" data-scene="starship">Starship</button>
+            <button type="button" role="tab" aria-selected="false" data-scene="temple">Temple</button>
+            <button type="button" role="tab" aria-selected="false" data-scene="orbital">Orbital bay</button>
+            <button type="button" role="tab" aria-selected="false" data-scene="warehouse">Warehouse</button>
+          </div>
+        </div>
+
+        <div class="application-title-row">
+          <div>
+            <span id="application-category">Impact &amp; collision</span>
+            <h3 id="application-scene-title">Reactor safety vanes</h3>
+          </div>
+          <p id="application-description">A rolling maintenance unit triggers a four-object chain reaction.</p>
+        </div>
+
+        <div class="video-compare" role="tabpanel" aria-live="polite">
+          <figure class="video-card">
+            <div class="video-label">
+              <span>Baseline</span>
+              <strong>w/o Spatial Guidance</strong>
+            </div>
+            <video
+              id="baseline-video"
+              src="assets/applications/first-frame/domino_starship.mp4"
+              poster="assets/applications/posters/domino_starship_generated_first.png"
+              autoplay
+              muted
+              loop
+              playsinline
+              controls
+              preload="metadata"
+            ></video>
+          </figure>
+          <figure class="video-card video-card-accent">
+            <div class="video-label">
+              <span>Ours</span>
+              <strong>w Spatial Guidance</strong>
+            </div>
+            <video
+              id="guided-video"
+              src="assets/applications/trajectory-guided/domino_starship.mp4"
+              poster="assets/applications/posters/domino_starship_generated_first.png"
+              autoplay
+              muted
+              loop
+              playsinline
+              controls
+              preload="metadata"
+            ></video>
+          </figure>
+        </div>
+      </section>
+
+      <section class="citation section-band" id="citation" aria-labelledby="citation-title">
+        <div class="shell citation-grid reveal">
+          <div class="section-heading compact">
+            <p class="eyebrow">Reference</p>
+            <h2 id="citation-title">Citation</h2>
+            <p>The entry will be updated when the paper is publicly released.</p>
+          </div>
+          <div class="citation-block">
+            <pre><code id="bibtex">@misc{sun2027reason,
+  title  = {Reason, Plan, and Simulate: Trajectory-Grounded
+            VLMs for Rigid-Body Simulation},
+  author = {Sun, Qi and Liao, Jing},
+  year   = {2027},
+  note   = {Manuscript}
+}</code></pre>
+            <button class="copy-button" type="button" data-copy-target="bibtex">Copy BibTeX</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <p>Reason, Plan, and Simulate</p>
+        <p>City University of Hong Kong &middot; 2027</p>
+      </div>
+    </footer>
+  </body>
+</html>
