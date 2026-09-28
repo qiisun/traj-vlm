@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Reason, Plan, and Simulate: trajectory-grounded vision-language models for generalizable rigid-body simulation."
+      content="Reason, Plan, and Animate: trajectory-grounded vision-language models for rigid-body simulation."
     />
-    <title>Reason, Plan, and Simulate</title>
+    <title>Reason, Plan, and Animate</title>
     <link rel="icon" href="data:," />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,8 +20,8 @@
 
     <header class="site-header">
       <nav class="nav shell" aria-label="Primary navigation">
-        <a class="wordmark" href="#top" aria-label="Reason, Plan, and Simulate home">
-          <span>R</span><span>P</span><span>S</span>
+        <a class="wordmark" href="#top" aria-label="Reason, Plan, and Animate home">
+          <span>R</span><span>P</span><span>A</span>
         </a>
         <button
           class="menu-toggle"
@@ -49,7 +49,7 @@
       <section class="hero" id="top">
         <div class="shell hero-inner">
           <h1>
-            <span class="hero-title-prefix">Reason, Plan, and Simulate:</span>
+            <span class="hero-title-prefix">Reason, Plan, and Animate:</span>
             <span class="hero-title-main">Trajectory-Grounded VLMs for Rigid-Body Simulation</span>
           </h1>
           <div class="authors" aria-label="Authors">
@@ -59,9 +59,7 @@
           <p class="affiliation">City University of Hong Kong</p>
 
           <div class="hero-actions" aria-label="Project resources">
-            <span class="button is-disabled" aria-disabled="true">
-              Paper <small>soon</small>
-            </span>
+            <a class="button" href="paper.pdf">Paper</a>
             <span class="button is-disabled" aria-disabled="true">
               Code <small>soon</small>
             </span>
@@ -85,7 +83,7 @@
           </div>
           <p>
             A trajectory-grounded VLM reasons about object-centric physical events,
-            plans sparse numerical waypoints, and simulates dense per-object
+            plans sparse numerical waypoints, and animates dense per-object
             <span class="math">SE(3)</span> trajectories for generalizable rigid-body dynamics.
           </p>
         </div>
@@ -98,22 +96,30 @@
         </div>
         <div class="abstract-copy">
           <p>
-            Learning-based physical simulators produce explicit object dynamics, but
-            their physical repertoire is typically bounded by the task-specific
-            trajectories seen during training. Foundation vision-language models
-            offer broader semantic and qualitative physical priors, yet are not
-            trained to predict temporally dense, metrically calibrated state
-            transitions.
+            World models aim to predict how a scene evolves over time. Many video
+            world models generate future frames, which is computationally expensive
+            and does not explicitly represent object dynamics. In this paper, we
+            instead study neural physical simulation that directly predicts
+            multi-object trajectories. Existing learning-based simulators, however,
+            acquire physical knowledge primarily from task-specific training data,
+            which can limit generalization to unseen scenarios.
           </p>
           <p>
-            We introduce a trajectory-grounded VLM for physical simulation. The model
-            first predicts an object-centric physical event trace and sparse numerical
-            translation waypoints. A shape-aware flow-matching decoder then conditions
-            on this explicit plan and the initial object geometry to generate dense
-            per-object <span class="math">SE(3)</span> trajectories. Together with MOVi,
-            our <strong>Rigid+</strong> benchmark evaluates generalization to unseen
-            shapes, object counts, physical parameters, and compositions of physical
-            phenomena.
+            To address this limitation, we introduce a trajectory-grounded
+            vision-language model (VLM) that combines broad physical priors from
+            foundation-model pretraining with trajectory supervision for accurate
+            multi-object dynamics prediction. Our framework decomposes prediction
+            into three levels: reason, plan, and animate. The VLM first reasons about
+            object-centric physical events and predicts a sparse motion plan, after
+            which a shape-aware flow-matching decoder animates the objects by
+            generating dense per-object <span class="math">SE(3)</span> trajectories.
+            We further introduce <strong>Rigid+</strong>, a benchmark spanning eight
+            categories of rigid-body phenomena, and evaluate generalization to unseen
+            shapes, object counts, initial velocities, and compositions of physical
+            phenomena. Experiments on MOVi and <strong>Rigid+</strong> show that
+            physical event reasoning and motion-plan conditioning improve trajectory
+            prediction, with robust gains over learning-based simulators under
+            distribution shift.
           </p>
         </div>
       </section>
@@ -706,11 +712,11 @@
           <div class="section-heading compact">
             <p class="eyebrow">Reference</p>
             <h2 id="citation-title">Citation</h2>
-            <p>The entry will be updated when the paper is publicly released.</p>
+            <p>Please use the following entry when referencing this work.</p>
           </div>
           <div class="citation-block">
             <pre><code id="bibtex">@misc{sun2027reason,
-  title  = {Reason, Plan, and Simulate: Trajectory-Grounded
+  title  = {Reason, Plan, and Animate: Trajectory-Grounded
             VLMs for Rigid-Body Simulation},
   author = {Sun, Qi and Liao, Jing},
   year   = {2027},
@@ -724,7 +730,7 @@
 
     <footer class="site-footer">
       <div class="shell footer-inner">
-        <p>Reason, Plan, and Simulate</p>
+        <p>Reason, Plan, and Animate</p>
         <p>City University of Hong Kong &middot; 2027</p>
       </div>
     </footer>
